@@ -8,30 +8,31 @@ const App = () => {
 	const [amount, setAmount] = useState("");
 	const [quantity, setQuantity] = useState("");
 	const [userDisplayName, setUserDisplayName] = useState("");
+	const [shouldRender, setShouldRender] = useState(false);
 
 	useEffect(() => {
+		const message = searchParams.get("message");
+
 		liff
 			.init({
 				liffId: "2001820290-d9ojVkVZ",
 			})
 			.then(() => liff.getProfile())
 			.then((profile) => setUserDisplayName(profile.displayName))
+			.then(() => {
+				if (message !== null) {
+					liff
+						.sendMessages([{ type: "text", text: message }])
+						.then(liff.closeWindow())
+						.catch(() => liff.closeWindow());
+				} else {
+					setShouldRender(true);
+				}
+			})
 			.catch((error) => {
 				console.error("LIFF 初始化失败", error.message);
 			});
-	}, []);
-
-	const message = searchParams.get("message");
-
-	if (message !== null) {
-		liff
-			.init({
-				liffId: "2001820290-d9ojVkVZ",
-			})
-			.then(() => liff.sendMessages([{ type: "text", text: message }]))
-			.then(() => liff.closeWindow())
-			.catch(() => liff.closeWindow());
-	}
+	}, [searchParams]);
 
 	const handleAmountChange = (event) => {
 		setAmount(event.target.value);
@@ -85,7 +86,7 @@ const App = () => {
 			});
 	};
 
-	return (
+	return shouldRender ? (
 		<div>
 			<h1>LINE 整人工具</h1>
 
@@ -102,7 +103,7 @@ const App = () => {
 			</label>
 			<button onClick={handleLineEnvelope}>LINE 紅包</button>
 		</div>
-	);
+	) : null;
 };
 
 export default App;
