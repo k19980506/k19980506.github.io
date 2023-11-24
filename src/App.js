@@ -7,11 +7,12 @@ const App = () => {
 	const [searchParams] = useSearchParams();
 	const [amount, setAmount] = useState("");
 	const [quantity, setQuantity] = useState("");
+	const [message, setMessage] = useState("");
 	const [userDisplayName, setUserDisplayName] = useState("");
 	const [shouldRender, setShouldRender] = useState(false);
 
 	useEffect(() => {
-		const message = searchParams.get("message");
+		const text = searchParams.get("text");
 
 		liff
 			.init({
@@ -20,9 +21,9 @@ const App = () => {
 			.then(() => liff.getProfile())
 			.then((profile) => setUserDisplayName(profile.displayName))
 			.then(() => {
-				if (message !== null) {
+				if (text !== null) {
 					liff
-						.sendMessages([{ type: "text", text: message }])
+						.sendMessages([{ type: "text", text: text }])
 						.then(liff.closeWindow())
 						.catch(() => liff.closeWindow());
 				} else {
@@ -42,8 +43,12 @@ const App = () => {
 		setQuantity(event.target.value);
 	};
 
+	const handleMessageChange = (event) => {
+		setMessage(event.target.value);
+	};
+
 	const handleLinePay = () => {
-		const contents = linePayContent(amount, userDisplayName);
+		const contents = linePayContent(amount, userDisplayName, message);
 
 		liff
 			.shareTargetPicker([
@@ -64,15 +69,17 @@ const App = () => {
 	};
 
 	const handleLineEnvelope = () => {
-		console.log("按鈕 2 被點擊了！");
-		// 在這裡可以使用 quantity 和其他相關數據
-		const contents = lineEnvelopeContent(amount, userDisplayName);
+		const contents = lineEnvelopeContent(
+			parseInt(quantity),
+			userDisplayName,
+			message
+		);
 
 		liff
 			.shareTargetPicker([
 				{
 					type: "flex",
-					altText: `已收到NT$ ${amount}的轉帳。`,
+					altText: "您收到了紅包訊息！",
 					contents: contents,
 				},
 			])
@@ -89,7 +96,12 @@ const App = () => {
 	return shouldRender ? (
 		<div>
 			<h1>LINE 整人工具</h1>
-
+			<label>
+				請輸入想讓對方說的話：
+				<input type="text" value={message} onChange={handleMessageChange} />
+			</label>
+			<br />
+			<br />
 			<label>
 				金額：
 				<input type="text" value={amount} onChange={handleAmountChange} />
